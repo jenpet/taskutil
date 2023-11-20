@@ -1,0 +1,29 @@
+version: '3'
+
+silent: true
+
+vars:
+  # TODO: if the included taskfile would now its own absolute position we could omit handling the util directory
+  DOCKER_SCRIPTS_DIRECTORY: "{{.USER_WORKING_DIR}}/.taskutil/docker/scripts"
+  HELPER_CONTAINER_NAME: "little-helper1"
+  HELPER_IMAGE: "busybox"
+
+tasks:
+  login:
+    cmd: |
+      sh -c "REGISTRY={{ .registry }} REGISTRY_USER={{ .user }} REGISTRY_PASSWORD={{ .password }} \
+        {{ .DOCKER_SCRIPTS_DIRECTORY }}/docker-login.sh"
+
+  push:
+    cmd |
+      sh -c "IMAGE={{ .image }} {{ .DOCKER_SCRIPTS_DIRECTORY }}/docker-push.sh"
+
+  ctv:
+    cmd: | # TODO: Is there a nicer way instead of invoking 'sh -c'?
+      sh -c "VOLUME={{ .volume }} VPATH={{ .vpath }} LPATH={{ .lpath}} \
+      {{ .DOCKER_SCRIPTS_DIRECTORY }}/copy-to-volume.sh"
+
+  build:
+    cmd: |
+      sh -c "DOCKERFILE='{{ .file }}' IMAGE_NAME='{{ .name }}' BUILD_HASH='{{ .hash }}' BUILD_VERSION='{{ .version }}' \
+      TAG_LATEST='{{ .latest }}' {{ .DOCKER_SCRIPTS_DIRECTORY }}/build-image.sh"

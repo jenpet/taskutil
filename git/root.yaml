@@ -1,0 +1,32 @@
+version: '3'
+
+silent: true
+
+vars:
+  GIT_SCRIPTS_DIRECTORY: "{{.USER_WORKING_DIR}}/.taskutil/git/scripts"
+  GIT_PWD_IS_REPO:
+    sh: git rev-parse --is-inside-work-tree 2>/dev/null || echo "false"
+  GIT_HASH:
+    sh: HASH=$(git rev-parse --short HEAD 2>/dev/null || true);echo ${HASH:-}
+
+tasks:
+  latest-release:
+    cmd: echo $(git tag -l 2>/dev/null | grep -E '^\d+(\.\d+)?(\.\d+)?$' | sort -V | tail -n 1 || true)
+  tag-release:
+    cmd: |
+      export VERSION_TAG="{{ .version }}"
+      export CURRENT_VERSION="{{ .GIT_LATEST_RELEASE_TAG }}"
+      if [ -z "${VERSION_TAG}" ] && [ -z "${CURRENT_VERSION}" ]; then
+        echo "Release version could not be determined based on current git tags and 'version' parameter is not set. Exiting (1)."
+        exit 1; 
+      fi
+      if [ -z "${VERSION_TAG}" ]; then
+        export BUMP_METHOD="{{ .bump }}"
+        export VERSION_TAG=$({{ .GIT_SCRIPTS_DIRECTORY }}/version-bump.sh)
+      fi
+      export COMPONENT_NAME="{{ .component }}"
+      export CONFLICT_MODE="{{ .conflict }}"
+      {{ .GIT_SCRIPTS_DIRECTORY }}/tag-release.sh
+    vars:
+      GIT_LATEST_RELEASE_TAG:
+        sh: task latest-release
