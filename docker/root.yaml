@@ -20,7 +20,7 @@ tasks:
 
   ctv:
     cmd: | # TODO: Is there a nicer way instead of invoking 'sh -c'?
-      sh -c "VOLUME={{ .volume }} VPATH={{ .vpath }} LPATH={{ .lpath}} \
+      sh -c "VOLUME={{ .volume }} VPATH={{ .vpath }} LPATH={{ .lpath}} GROUP={{ .group }} OWNER={{ .owner }} \
       {{ .DOCKER_SCRIPTS_DIRECTORY }}/copy-to-volume.sh"
 
   build:
